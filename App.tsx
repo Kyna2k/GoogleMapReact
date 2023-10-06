@@ -10,7 +10,7 @@ import {
 
 import {MAP_API_KEY} from '@env';
 import {useCallback, useState, useEffect, useRef} from 'react';
-import MapView, {LatLng, Marker, Point} from 'react-native-maps';
+import MapView, {Circle, LatLng, Marker, Point} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 
 const useStyle = StyleSheet.create({
@@ -40,7 +40,7 @@ const App = () => {
     longitudeDelta: 1,
   });
   const Location = () => {
-    Geolocation.getCurrentPosition(
+    Geolocation.watchPosition(
       position => {
         const {latitude, longitude} = position.coords;
         const init = {
@@ -71,7 +71,7 @@ const App = () => {
         },
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        Location()
+        Location();
       } else {
         console.log('Camera permission denied');
       }
@@ -86,30 +86,42 @@ const App = () => {
     };
     permission();
   }, []);
-  console.log(location.latitude);
 
   return (
     <View style={{flex: 1}}>
       <MapView
-        ref={(map) => _map.current = map}
+        ref={map => (_map.current = map)}
         style={useStyle.container}
         region={location}
         showsUserLocation={true}
         zoomEnabled={true}
-        showsMyLocationButton = {true}
-           showsCompass = {true}
-           showsIndoors = {true}
+        showsMyLocationButton={true}
+        showsCompass={true}
+        showsIndoors={true}
+        onUserLocationChange={event => {
+          _map.current?.animateToRegion({
+            latitude : event.nativeEvent.coordinate?.latitude!,
+            longitude : event.nativeEvent.coordinate?.longitude!,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.005,
+          }, 500)
+          setLocation({
+            latitude : event.nativeEvent.coordinate?.latitude!,
+            longitude : event.nativeEvent.coordinate?.longitude!,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.005,
+          })
+        }}
+        followsUserLocation={true}
         >
+          <Circle
+                center = {location}
+                strokeWidth = { 1 }
+                radius={50}
+                strokeColor = { '#1a66ff' }
+                fillColor = { 'rgba(230,238,255,0.5)' }
+        />
         </MapView>
-      <View style={{position: 'absolute', bottom: 10, right: 10}}>
-        <TouchableHighlight onPress={() => {
-          _map.current?.animateToRegion(location,500)
-        }}>
-          <View style={useStyle.button}>
-            <Text>Touch Here</Text>
-          </View>
-        </TouchableHighlight>
-      </View>
     </View>
   );
 };
