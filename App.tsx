@@ -7,6 +7,7 @@ import {
   Platform,
   TouchableHighlight,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 
 import {MAP_API_KEY} from '@env';
@@ -32,6 +33,101 @@ type Location = {
   longitudeDelta: number;
 };
 
+type Pokemon = {
+  id : string,
+  name: string,
+  location : Location,
+  avatar : any,
+}
+
+const Data : Array<Pokemon>  = [
+  {
+    id : '1',
+    name : "Vit",
+    location : {
+      latitude: 10.4114,
+      longitude: 107.1362,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.005,
+    },
+    avatar : require('./src/assets/vit.png')
+  },
+  {
+    id : '2',
+    name : "Vit",
+    location : {
+      latitude: 10.3395,
+      longitude: 107.0903,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.005,
+    },
+    avatar : require('./src/assets/vit.png')
+
+  },
+  {
+    id : '3',
+    name : "Vit",
+    location : {
+      latitude: 10.3376,
+      longitude: 107.0898,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.005,
+    },
+    avatar : require('./src/assets/vit.png')
+
+  },
+  {
+    id : '4',
+    name : "Vit",
+    location : {
+      latitude: 10.3310,
+      longitude: 107.0799,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.005,
+    },
+    avatar : require('./src/assets/vit.png')
+
+  },
+  {
+    id : '5',
+    name : "Vit",
+    location : {
+      latitude: 10.3220,
+      longitude: 107.0836,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.005,
+    },
+    avatar : require('./src/assets/vit.png')
+
+  },
+  {
+    id : '6',
+    name : "Vit",
+    location : {
+      latitude: 10.3397,
+      longitude: 107.0882,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.005,
+    },
+    avatar : require('./src/assets/vit.png')
+
+  },
+  {
+    id : '7',
+    name : "Vit",
+    location : {
+      latitude: 10.3402,
+      longitude: 107.0886,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.005,
+    },
+    avatar : require('./src/assets/vit.png')
+
+  },
+]
+
+
+
 function distance(coords1: Location, coords2: Location) {
   const {latitude: lat1, longitude: lon1} = coords1;
   const {latitude: lat2, longitude: lon2} = coords2;
@@ -46,15 +142,15 @@ function distance(coords1: Location, coords2: Location) {
       Math.sin(halfDLon) *
       Math.sin(halfDLon);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c * 1000; // 100m
+  return R * c * 1000; // 100
 }
 const App = () => {
   const _map = useRef<MapView | null>(null);
+  const [havePokemon, setHavePokemon] = useState(false);
   const [focus, setFocus] = useState(true);
   const [marker, setMarker] = useState<Location>({
-    latitude: 10.370855,
-    longitude: 107.082665,
+    latitude: 10.4114,
+    longitude: 107.1362,
     latitudeDelta: 1,
     longitudeDelta: 1,
   });
@@ -96,7 +192,7 @@ const App = () => {
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
         Location();
       } else {
-        console.log('Camera permission denied');
+        console.log('Location permission denied');
       }
     } catch (err) {
       console.warn(err);
@@ -108,7 +204,14 @@ const App = () => {
       await getLocation();
     };
     permission();
-  }, []);
+    if (distance(location, marker) <= 100) {
+      setHavePokemon(true);
+    } 
+    else {
+      setHavePokemon(false);
+    }
+
+  }, [location.latitude, location.longitude, marker]);
 
   return (
     <View style={{flex: 1}}>
@@ -123,22 +226,14 @@ const App = () => {
         showsIndoors={true}
         onUserLocationChange={event => {
           if (!focus) return;
-
-          _map.current?.animateToRegion(
-            {
-              latitude: event.nativeEvent.coordinate?.latitude!,
-              longitude: event.nativeEvent.coordinate?.longitude!,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.005,
-            },
-            500,
-          );
-          setLocation({
+          const lalo = {
             latitude: event.nativeEvent.coordinate?.latitude!,
             longitude: event.nativeEvent.coordinate?.longitude!,
             latitudeDelta: 0.01,
             longitudeDelta: 0.005,
-          });
+          };
+          _map.current?.animateToRegion(lalo, 500);
+          setLocation(lalo);
         }}>
         <Circle
           center={location}
@@ -159,37 +254,73 @@ const App = () => {
           }}
           coordinate={marker!}
           title={'huy'}
-          description={'Nè'}
-        />
+          description={'Nè'}>
+          <Image
+            source={require('./src/assets/chansey.png')}
+            style={{width: 35, height: 25}}
+            resizeMode="contain"
+          />
+        </Marker>
+        {Data.map((item) => {
+          return <Marker   
+          key={item.id}     
+          coordinate={item.location!}
+          title={item.name}
+          description={'Nè'}>
+          <Image
+            source={item.avatar}
+            style={{width: 35, height: 25}}
+            resizeMode="contain"
+          />
+        </Marker>
+        })}
       </MapView>
-      <View style={{position: 'absolute', bottom: 10, right: 10}}>
-        <TouchableOpacity
+      <View style={{width: '100%', position: 'absolute', bottom: 10, left : 10, right : 10}}>
+        {havePokemon ? (
+          <View style={{width: '100%', padding: 10, backgroundColor: '#DDDDDD'}}>
+            <Text>
+              {' '}
+              Có pokemon ở gần đây cách bạn {' '}
+              {distance(location, marker).toFixed()}m{' '}
+            </Text>
+          </View>
+        ) : null}
+        {Data.map((item) => {
+          if(distance(location, item.location) > 100) return
+          return <View style={{width: '80%', padding: 10, backgroundColor: '#DDDDDD', marginVertical: 5, borderRadius: 30}}>
+          <Text>
+            {' '}
+            Có pokemon {item.name} ở gần đây cách bạn{' '}
+            {distance(location, item.location).toFixed()}m{' '}
+          </Text>
+        </View>
+        })}
+        <View
           style={{
-            ...useStyle.button,
-            backgroundColor: focus ? 'black' : '#DDDDDD',
-          }}
-          onPress={() => {
-            setFocus(!focus);
+            paddingHorizontal: 20,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
           }}>
-          <Text>Focus</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={{position: 'absolute', bottom: 10, left: 10}}>
-        <TouchableOpacity
-          style={{
-            ...useStyle.button,
-          }}
-          onPress={() => {
-            const value =
-              Math.sqrt(
-                Math.pow(location.latitude - marker.latitude, 2) +
-                  Math.pow(location.longitude - marker.longitude, 2),
-              ) * 100;
-            console.log('value', value);
-            console.log('result', distance(location, marker));
-          }}>
-          <Text>Find Pokemon</Text>
-        </TouchableOpacity>
+          <TouchableHighlight
+            style={{
+              ...useStyle.button,
+              backgroundColor: focus ? 'yellow' : '#DDDDDD',
+            }}
+            onPress={() => {
+              setFocus(!focus);
+            }}>
+            <Text>Focus</Text>
+          </TouchableHighlight>
+          <TouchableHighlight
+            style={{
+              ...useStyle.button,
+            }}
+            onPress={() => {
+              console.log('result', distance(location, marker));
+            }}>
+            <Text>Find Pokemon</Text>
+          </TouchableHighlight>
+        </View>
       </View>
     </View>
   );
