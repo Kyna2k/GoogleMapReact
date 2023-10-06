@@ -122,6 +122,7 @@ const App = () => {
                 fillColor = { 'rgba(230,238,255,0.5)' }
         />
         </MapView>
+      
     </View>
   );
 };
